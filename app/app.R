@@ -49,19 +49,17 @@ body <- dashboardBody(
   tabItems(
     # ------------------ Introduction ----------------------------------------------------------------
     
-    tabItem(tabName = "Introduction", fluidPage(
+    tabItem(tabName = "Home", fluidPage(
       fluidRow(box(width = 20, title = "Introduction", status = "primary",
                    solidHeader = TRUE, h3("NYC Motor Vehicle Accidents"),
                    h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
                    h5(strong("Dataset:"), "The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
                    h5(strong("Collection of Data:"), "The citywide traffic safety initiative, Vision Zero, started in the year 2014 and has pushed for further data collection. NYPD officers now document the information to be stored in a database using the The Finest Online Records Management System (FORMS). It is updated daily."),
                    h5(strong("Purpose of Tool:"), "This tool provides the ability to explore traffic patterns through the years and see how COVID has affected it. It can be used by a number of different audiences. Primarily, it can used by the NYPD & Vision Zero (the citywide safety traffic initiative) for the purposes of improving safety. It can even be used by NYC commuters to plan optimal routes, or  prospective home buyers to explore safer neighborhoods. Users can analyze the initial extreme COVID effects in 2020, but also see what persists today since the data is updated daily. We know COVID has changed travel due to things like remote work and limited flights, but there are different ways to explore it")
-<<<<<<< HEAD
       )))
-=======
-                   )))
->>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
-    ), # end of home 
+
+    ),
+# end of home 
     # ------------------ Map-----------------------------------
     tabItem(tabName = "Map",
             h2("Accidents by Zip Code", align = 'center'),
@@ -150,56 +148,38 @@ body <- dashboardBody(
                           mainPanel(
                             plotOutput(outputId = "Plot4")
                           )
-<<<<<<< HEAD
-            )
-    ),
-=======
+
               )
         ),
     
     
     # ------------------ References ----------------------------------------------------------------
     
-    tabItem(tabName = "References", fluidPage(
-      fluidRow(box(width = 20, title = "References", status = "primary",
-                   solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
-                   h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
-      )))
-    ) # end of reference
->>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
-    
-    
-    # ------------------ References ----------------------------------------------------------------
-    
-    tabItem(tabName = "References", fluidPage(
-      fluidRow(box(width = 20, title = "References", status = "primary",
-                   solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
-                   h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
-      )))
-    ) # end of reference
-    
+tabItem(tabName = "References", fluidPage(
+  fluidRow(box(width = 20, title = "References", status = "primary",
+               solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
+               h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
+  )))
+) # end of reference
+
   )
 )
 
 
 ui <- dashboardPage(
-  title="NYC Vehicle Accidents",
+  title="Vehicle Accidents",
   skin = "black", 
-  dashboardHeader(title="NYC Motor Vehicle Accidents"),
+  dashboardHeader(title="Vehicle Accidents"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Introduction", tabName = "Introduction"),
+      menuItem("Home", tabName = "Home"),
       menuItem("Map", tabName = "Map"),
       menuItem("Boroughs", tabName = "Boroughs"),
       menuItem("Type of Accidents", tabName = "Type"),
       menuItem("Time of Accidents", tabName = "Time"),
       menuItem("Casualities of Accidents", tabName = "Casualities"),
       menuItem("References", tabName = "References")
-<<<<<<< HEAD
     )),
-=======
-  )),
->>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
   body
 )
 
@@ -261,35 +241,35 @@ server <- function(input, output) {
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2018"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2018)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2019"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2019)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2020"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2020)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2021"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2021)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2022"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2022)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
@@ -297,13 +277,10 @@ server <- function(input, output) {
     }
     
     
-<<<<<<< HEAD
     
-=======
->>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
-  }, height = 750, width = 750)
+  }, height = 750, width = 900)
   
-  ###############################################################  
+  ###########################################################  
   
   output$Plot2 <- renderPlot({ 
     

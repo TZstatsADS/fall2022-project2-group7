@@ -239,35 +239,35 @@ server <- function(input, output) {
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2018"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2018)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2019"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2019)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2020"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2020)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2021"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2021)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
       zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$year == "2022"){
-      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2022)
       vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
       vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
       vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)

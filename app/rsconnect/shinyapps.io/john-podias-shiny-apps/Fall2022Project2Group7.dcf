@@ -1,0 +1,14 @@
+name: Fall2022Project2Group7
+title: Fall2022Project2Group7
+username:
+account: john-podias-shiny-apps
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7290119
+bundleId: 6396466
+url: https://john-podias-shiny-apps.shinyapps.io/Fall2022Project2Group7/
+when: 1665600959.84572
+lastSyncTime: 1665600959.84574
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .Rapp.history|app_backup.R|README.md|VehicleCollisions.csv
