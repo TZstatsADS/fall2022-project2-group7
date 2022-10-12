@@ -1,0 +1,122 @@
+---
+title: "Untitled"
+author: "wz2563, css2211"
+date: '2022-10-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(shiny)
+```
+
+```{r}
+vehicle_collisions_df = read.csv("VehicleCollisions.csv")%>%
+drop_na()
+colnames(vehicle_collisions_df) <- gsub("\\.","_",colnames(vehicle_collisions_df))
+```
+
+```{r}
+vehicle_collisions_df$CRASH_DATE <- as.Date(vehicle_collisions_df$CRASH_DATE, format = "%m/%d/%Y")
+vehicle_collisions_df$CRASH_TIME <- as.POSIXct(vehicle_collisions_df$CRASH_TIME, format = "%H:%M")
+
+vehicle_collisions_df <- vehicle_collisions_df%>%
+  mutate(Year = as.numeric(format(CRASH_DATE,'%Y')),
+         Month = as.numeric(format(CRASH_DATE,'%m')),
+         Hour = as.numeric(format(as.POSIXct(CRASH_TIME), format = "%H")))%>%
+  filter(Year>2016)
+```
+
+
+
+Geographic Analysis
+
+```{r}
+library(ggplot2)
+district_analysis <- vehicle_collisions_df%>%
+  group_by(BOROUGH,Year,Month)%>%
+  summarise(count = n())
+```
+
+```{r}
+plot_1 <- ggplot(district_analysis,aes(x=factor(Year),count,fill=BOROUGH))+
+  geom_bar(stat = "identity")
+plot_1
+```
+```{r}
+plot_7 <- ggplot(district_analysis,aes(x=BOROUGH,count,fill=factor(Year)))+
+  geom_bar(stat = "identity")
+plot_7
+```
+
+```{r}
+district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == 'BRONX')
+district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
+#plot_8 <- ggplot(district_analysis2,aes(x=count,fill=factor(Year))) + geom_bar(stat = "identity")
+
+plot_8 <- ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1) + coord_polar("y", start=0)
+
+plot_8
+```
+
+```{r}
+
+plot_2 <- ggplot(district_analysis,aes(x=factor(Month),count,fill=BOROUGH))+
+  geom_histogram(stat = "identity",position="dodge")+
+  facet_grid(rows = vars(Year))+
+  labs(y="Number of vehicle collisions happened",
+       x="Month")
+plot_2
+```
+
+Type of Vehicles Analysis:
+
+```{r}
+vehicle_analysis <- vehicle_collisions_df%>%
+  group_by(BOROUGH,VEHICLE_TYPE_CODE_1,Year)%>%
+  summarise(count=n())%>%
+  filter(count>50)%>%
+  filter(VEHICLE_TYPE_CODE_1 != "")
+```
+```{r}
+plot_3 <- ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+  geom_histogram(stat = "identity",position="dodge")+
+  facet_grid(rows = vars(BOROUGH))+
+  labs(y="Number of different vehicle collisions happened",
+       x="Month")
+plot_3
+
+```
+
+
+Daytime Analysis:
+
+```{r}
+daytime_analysis <- vehicle_collisions_df%>%
+  mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                     ifelse(Hour %in% 13:18, "Afternoon",
+                                            ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                                   ))))%>%
+  group_by(BOROUGH,Daytime,Year,Month)%>%
+  summarise(count=n())
+```
+```{r}
+
+plot_4 <- ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+  geom_histogram(stat = "identity",position="dodge")+
+  facet_grid(rows = vars(BOROUGH))+
+  labs(y="Number of different time when collisions happened",
+       x="Month")
+plot_4
+```
+
+
