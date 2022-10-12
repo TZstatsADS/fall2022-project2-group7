@@ -1,15 +1,16 @@
-library(shiny)
+#library(shiny)
 library(ggplot2)
 library(plotly)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
-library(shinydashboard)
-library(fresh)
+#library(shinydashboard)
+library(fresh) 
 library(devtools)
-install_github('arilamstein/choroplethrZip@v1.5.0')
+install_github('arilamstein/choroplethrZip@v1.5.0', force=TRUE)
 library(choroplethr)
 library(choroplethrZip)
+#library(rsconnect)
 
 
 vehicle_collisions_df = read.csv("VehicleCollisions.csv") %>% drop_na()
@@ -1559,3 +1560,5 @@ server <- function(input, output,session) {
 }
 
 shinyApp(ui, server)
+
+#rsconnect::deployApp('/Users/css2211/Projects/fall2022-project2-group7/app')
