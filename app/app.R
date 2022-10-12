@@ -46,11 +46,11 @@ mytheme <- create_theme(
 body <- dashboardBody(
   use_theme(mytheme),
   tabItems(
-    # ------------------ Home ----------------------------------------------------------------
+    # ------------------ Introduction ----------------------------------------------------------------
     
-    tabItem(tabName = "Home", fluidPage(
+    tabItem(tabName = "Introduction", fluidPage(
       fluidRow(box(width = 20, title = "Introduction", status = "primary",
-                   solidHeader = TRUE, h3("NYC Motor Vehicle Collisions"),
+                   solidHeader = TRUE, h3("NYC Motor Vehicle Accidents"),
                    h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
                    h5(strong("Dataset:"), "The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
                    h5(strong("Collection of Data:"), "The citywide traffic safety initiative, Vision Zero, started in the year 2014 and has pushed for further data collection. NYPD officers now document the information to be stored in a database using the The Finest Online Records Management System (FORMS). It is updated daily."),
@@ -59,7 +59,7 @@ body <- dashboardBody(
     ), # end of home 
     # ------------------ Map-----------------------------------
     tabItem(tabName = "Map",
-            h2("Map", align = 'center'),
+            h2("Accidents by Zip Code", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -76,7 +76,7 @@ body <- dashboardBody(
     ),
     # ------------------ Boroughs-----------------------------------
     tabItem(tabName = "Boroughs",
-            h2("Accidents occured In Each Neighborhood", align = 'center'),
+            h2("Accidents by Borough", align = 'center'),
             sidebarLayout(position = "left", 
             sidebarPanel(
             h4("Filter"),
@@ -93,7 +93,7 @@ body <- dashboardBody(
         ),
     # ------------------ Type of Accidents-----------------------------------
     tabItem(tabName = "Type",
-            h2("Types of accidents occured", align = 'center'),
+            h2("Types of Accidents", align = 'center'),
             sidebarLayout(position = "left", 
             sidebarPanel(
             h4("Filter"),
@@ -110,7 +110,7 @@ body <- dashboardBody(
         ),
     # ------------------ Time of Accidents-----------------------------------
     tabItem(tabName = "Time",
-            h2("Time when accidents occured", align = 'center'),
+            h2("Time of Accidents", align = 'center'),
             sidebarLayout(position = "left", 
             sidebarPanel(
             h4("Filter"),
@@ -126,7 +126,7 @@ body <- dashboardBody(
         )
     ),
     tabItem(tabName = "Casualities",
-            h2("Victims of accidents", align = 'center'),
+            h2("Victims of Accidents", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -163,12 +163,12 @@ body <- dashboardBody(
 
 
 ui <- dashboardPage(
-  title="Vehicle Accidents",
+  title="NYC Vehicle Accidents",
   skin = "black", 
-  dashboardHeader(title="Vehicle Accidents"),
+  dashboardHeader(title="NYC Motor Vehicle Accidents"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Home", tabName = "Home"),
+      menuItem("Introduction", tabName = "Introduction"),
       menuItem("Map", tabName = "Map"),
       menuItem("Boroughs", tabName = "Boroughs"),
       menuItem("Type of Accidents", tabName = "Type"),
@@ -216,7 +216,7 @@ server <- function(input, output,session) {
       ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20)) 
     }
     
-  }, height = 750, width = 900)
+  }, height = 750, width = 800)
   
   ###############################################################  
   
@@ -274,7 +274,7 @@ server <- function(input, output,session) {
     
 
     
-  }, height = 750, width = 900)
+  }, height = 750, width = 750)
   
   ###############################################################  
   
@@ -438,7 +438,7 @@ server <- function(input, output,session) {
              x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
       }
     
-  }, height = 750, width = 900)
+  }, height = 750, width = 800)
   
   
   
