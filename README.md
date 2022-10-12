@@ -19,7 +19,7 @@ The **learning goals** for this project is:
 ## Project Title NYC Motor Vehicle Collisions
 Term: Fall 2022
 
-+ Team #
++ Team 7
 + **Projec title**: NYC Motor Vehicle Collisions
 	+ Chaitanya Shah
 	+ Weilin Zhou
