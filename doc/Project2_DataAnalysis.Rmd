@@ -1,6 +1,6 @@
 ---
-title: "Untitled"
-author: "wz2563, css2211"
+title: "Data Analysis"
+author: "wz2563, css2211, jep2215 "
 date: '2022-10-10'
 output: html_document
 ---
@@ -17,11 +17,14 @@ library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(shiny)
+library(devtools)
+install_github('arilamstein/choroplethrZip@v1.5.0')
+library(choroplethr)
+library(choroplethrZip)
 ```
 
 ```{r}
-vehicle_collisions_df = read.csv("VehicleCollisions.csv")%>%
-drop_na()
+vehicle_collisions_df = read.csv("VehicleCollisions.csv") %>% drop_na()
 colnames(vehicle_collisions_df) <- gsub("\\.","_",colnames(vehicle_collisions_df))
 ```
 
@@ -36,8 +39,19 @@ vehicle_collisions_df <- vehicle_collisions_df%>%
   filter(Year>2016)
 ```
 
+```{r}
+names(vehicle_collisions_df)
+```
 
 
+```{r}
+vehicle_analysis_for_map_collisions <- vehicle_collisions_df%>% rename(region = ZIP_CODE)
+vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+
+zip_choropleth(vehicle_analysis_for_map_collisions, title= "Collisions in NYC",legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085))
+    ```
+    
 Geographic Analysis
 
 ```{r}
@@ -68,6 +82,41 @@ plot_8 <- ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + ge
 plot_8
 ```
 
+Harm Sustained during accident Analysis
+
+```{r}
+
+vehicle_analysis <- vehicle_collisions_df%>%
+  group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+  summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+  filter(count>500)%>%
+  filter(VEHICLE_TYPE_CODE_1 != "")
+
+plot_11 <- ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+  geom_histogram(stat = "identity")+
+  labs(y="Number of different vehicle collisions happened",
+       x="Month")
+plot_11
+
+```
+
+```{r}
+
+vehicle_analysis <- vehicle_collisions_df%>%
+  group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+  summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+  filter(count>100)%>%
+  filter(VEHICLE_TYPE_CODE_1 != "")
+
+plot_12 <- ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+  geom_histogram(stat = "identity")+
+  labs(y="Number of different vehicle collisions happened",
+       x="Month")
+plot_12
+
+```
+
+Number of collisions Analysis
 ```{r}
 
 plot_2 <- ggplot(district_analysis,aes(x=factor(Month),count,fill=BOROUGH))+

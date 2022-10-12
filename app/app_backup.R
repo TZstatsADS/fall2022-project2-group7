@@ -4,11 +4,20 @@ library(plotly)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
-library(shiny)
+library(shinydashboard)
+library(fresh)
 
+#if (!require("choroplethr")) install.packages("choroplethr")
+#if (!require("devtools")) install.packages("devtools")
+#library(devtools)
 
-vehicle_collisions_df = read.csv("VehicleCollisions.csv")%>%
-  drop_na()
+#if (!require("choroplethrZip")) 
+# devtools::install_github('arilamstein/choroplethrZip@v1.5.0')
+
+#if (!require("ggmap")) devtools::install_github("dkahle/ggmap")
+#library(choroplethrZip)
+
+vehicle_collisions_df = read.csv("VehicleCollisions.csv") %>% drop_na()
 colnames(vehicle_collisions_df) <- gsub("\\.","_",colnames(vehicle_collisions_df))
 
 
@@ -16,72 +25,1466 @@ colnames(vehicle_collisions_df) <- gsub("\\.","_",colnames(vehicle_collisions_df
 vehicle_collisions_df$CRASH_DATE <- as.Date(vehicle_collisions_df$CRASH_DATE, format = "%m/%d/%Y")
 vehicle_collisions_df$CRASH_TIME <- as.POSIXct(vehicle_collisions_df$CRASH_TIME, format = "%H:%M")
 
-vehicle_collisions_df <- vehicle_collisions_df%>%
-  mutate(Year = as.numeric(format(CRASH_DATE,'%Y')),
-         Month = as.numeric(format(CRASH_DATE,'%m')),
-         Hour = as.numeric(format(as.POSIXct(CRASH_TIME), format = "%H")))%>%
-  filter(Year>2016)
+vehicle_collisions_df <- vehicle_collisions_df %>% mutate(Year = as.numeric(format(CRASH_DATE,'%Y')), Month = as.numeric(format(CRASH_DATE,'%m')), Hour = as.numeric(format(as.POSIXct(CRASH_TIME), format = "%H"))) %>% filter(Year>2016)
 
 
 # Define UI ----
 
-
-
-ui <- fluidPage(
-  # App title ----
-  titlePanel("Accidents Borough Wise"),
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      # Input: Select for the borough ----
-      selectInput(inputId = "borough",
-                  label = "Choose a borough:",
-                  choices = c("Overall","Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island",""))
-    ),
-    # Main panel for displaying outputs ----
-    mainPanel(
-      # Output: tsPlot on borough ----
-      plotOutput(outputId = "tsPlot1")
-    )
+mytheme <- create_theme(
+  adminlte_color(
+    light_blue = "#434C5E"
+  ),
+  adminlte_sidebar(
+    width = "180px",
+    dark_bg = "#D8DEE9",
+    dark_hover_bg = "#81A1C1",
+    dark_color = "#2E3440"
+  ),
+  adminlte_global(
+    content_bg = "#FFF",
+    box_bg = "#D8DEE9", 
+    info_box_bg = "#D8DEE9"
   )
 )
 
-server <- function(input, output) {
-  
-  output$tsPlot1 <- renderPlot({ 
+body <- dashboardBody(
+  use_theme(mytheme),
+  tabItems(
+    # ------------------ Home ----------------------------------------------------------------
     
-    if(input$borough == "Overall"){
+    tabItem(tabName = "Home", fluidPage(
+      fluidRow(box(width = 20, title = "Introduction", status = "primary",
+                   solidHeader = TRUE, h3("Motor Vehicle Collisions"),
+                   h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
+                   h5("Drawing data from multiple sources, this application provides insight into the economic impact of coronavirus 2019 (COVID-19) on New York’s city economy. The results shed light on both the financial fragility of many businesses, and the significant impact COVID-19 had on these businesses in the weeks after the COVID-19–related disruptions began."),
+                   h5("The application will mainly track down the change in the number of businesses being closed or newly opened across Covid timeline. We divided the businesses into 4 types:", strong("Retail, Service, Food and Beverage, Entertainment"))))
+      
+    )), # end of home 
+    # ------------------ Boroughs-----------------------------------
+    tabItem(tabName = "Boroughs",
+            h2("How Many Accidents occured In Each Neighborhood?", align = 'center'),
+            sidebarLayout(position = "left", 
+                          sidebarPanel(
+                            h4("Filter"),
+                            
+                            # widget for crime type
+                            selectInput(inputId = "borough",
+                                        label = "Choose a borough:",
+                                        choices = c("Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island","All"))
+                          ),
+                          mainPanel(
+                            plotOutput(outputId = "Plot1")
+                          )
+            )
+    ),
+    # ------------------ Type of Accidents-----------------------------------
+    tabItem(tabName = "Type",
+            h2("Different types of accidents occured", align = 'center'),
+            sidebarLayout(position = "left", 
+                          sidebarPanel(
+                            h4("Filter"),
+                            
+                            # widget for crime type
+                            selectInput(inputId = "borough2",
+                                        label = "Choose a borough:",
+                                        choices = c("Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island","All"))
+                          ),
+                          mainPanel(
+                            plotOutput(outputId = "Plot2")
+                          )
+            )
+    ),
+    # ------------------ Time of Accidents-----------------------------------
+    tabItem(tabName = "Time",
+            h2("Different Times when accidents occured", align = 'center'),
+            sidebarLayout(position = "left", 
+                          sidebarPanel(
+                            h4("Filter"),
+                            
+                            # widget for crime type
+                            selectInput(inputId = "borough3",
+                                        label = "Choose a borough:",
+                                        choices = c("Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island","All"))
+                          ),
+                          mainPanel(
+                            plotOutput(outputId = "Plot3")
+                          )
+            )
+    ),
+    tabItem(tabName = "Casualities",
+            h2("Different Victims when accidents occured", align = 'center'),
+            sidebarLayout(position = "left", 
+                          sidebarPanel(
+                            h4("Filter"),
+                            
+                            # widget for crime type
+                            selectInput(inputId = "borough4",
+                                        label = "Choose a borough:",
+                                        choices = c("Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island","All")),
+                            selectInput(inputId = "harm",
+                                        label = "Choose a type of harm:",
+                                        choices = c("Injured", "Death", "Both")),
+                            selectInput(inputId = "victim",
+                                        label = "Choose a type of victim:",
+                                        choices = c("Pedestrians", "Cyclist", "Motorist","All"))
+                          ),
+                          mainPanel(
+                            plotOutput(outputId = "Plot4")
+                          )
+            )
+    )
+    
+  )
+)
+
+
+ui <- dashboardPage(
+  title="Vehicle Accidents",
+  skin = "black", 
+  dashboardHeader(title="Vehicle Accidents"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Home", tabName = "Home"),
+      menuItem("Boroughs", tabName = "Boroughs"),
+      menuItem("Type of Accidents", tabName = "Type"),
+      menuItem("Time of Accidents", tabName = "Time"),
+      menuItem("Casualities of Accidents", tabName = "Casualities")
+    )),
+  body
+)
+
+
+server <- function(input, output,session) {
+  
+  session$allowReconnect("force")
+  
+  output$Plot1 <- renderPlot({ 
+    
+    if(input$borough == "All"){
       district_analysis2 <- vehicle_collisions_df %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20),axis.title.y = element_text(size = 20), axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20)) 
     }
     else if(input$borough == "Bronx"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BRONX")
       district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
     }
     else if(input$borough == "Manhattan"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "MANHATTAN")
       district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
     }
     else if(input$borough == "Brooklyn"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BROOKLYN")
       district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white")  + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white")  + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
     }
     else if(input$borough == "Queens"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "QUEENS")
       district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20)) 
     }
     else if(input$borough == "Staten Island"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "STATEN ISLAND")
       district_analysis2 <- district_analysis_borugh %>% group_by(Year)%>% summarise(count = n())
-      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20))   
+      ggplot(district_analysis2, aes(x="", y=count, fill=factor(Year))) + geom_bar(stat="identity", width=1, color="white") + coord_polar("y", start=0) + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), legend.text = element_text(size = 20), legend.title = element_text(size = 20)) 
     }
     
-  }, height = 800, width = 1000)
+  }, height = 750, width = 900)
+  
+  ###############################################################  
+  
+  output$Plot2 <- renderPlot({ 
+    
+    if(input$borough2 == "All"){
+      
+      vehicle_analysis <- vehicle_collisions_df %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+      
+    }
+    else if(input$borough2 == "Bronx"){
+      
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BRONX")
+      
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "") 
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough2== "Manhattan"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "MANHATTAN")
+      
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+      
+    }
+    else if(input$borough2 == "Brooklyn"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BROOKLYN")
+      
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+      
+    }
+    else if(input$borough2 == "Queens"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "QUEENS")
+      
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough2 == "Staten Island"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "STATEN ISLAND")
+      
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      
+      ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    
+  }, height = 750, width = 900)
+  
+  ###############################################################  
+  
+  output$Plot3 <- renderPlot({ 
+    
+    if(input$borough3 == "All"){
+      
+      daytime_analysis <- vehicle_collisions_df%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough3 == "Bronx"){
+      
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BRONX")
+      
+      daytime_analysis <- district_analysis_borugh%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough3== "Manhattan"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "MANHATTAN")
+      
+      
+      daytime_analysis <- district_analysis_borugh%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough3 == "Brooklyn"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BROOKLYN")
+      
+      
+      daytime_analysis <- district_analysis_borugh%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough3 == "Queens"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "QUEENS")
+      
+      daytime_analysis <- district_analysis_borugh%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$borough3 == "Staten Island"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "STATEN ISLAND")
+      
+      
+      daytime_analysis <- district_analysis_borugh%>%
+        mutate(Daytime = ifelse(Hour %in% 6:12, "Morning",
+                                ifelse(Hour %in% 13:18, "Afternoon",
+                                       ifelse(Hour %in% 19:23, "Evening","Midnight"
+                                       ))))%>%
+        group_by(Daytime,Year,Month)%>%
+        summarise(count=n())
+      
+      
+      ggplot(daytime_analysis,aes(x=factor(Year),count,fill=Daytime))+
+        geom_histogram(stat = "identity",position="dodge")+
+        labs(y="Number of different time when collisions happened",
+             x="Month") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    
+  }, height = 750, width = 900)
+  
+  
+  
+  output$Plot4 <- renderPlot({ 
+    
+    if(input$borough4 == "All"){
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>100)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>150)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- vehicle_collisions_df%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>100)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+      
+    }
+    else if(input$borough4 == "Bronx"){
+      
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BRONX")
+      
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+      
+    }
+    else if(input$borough4 == "Brooklyn"){
+      
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BROOKLYN")
+      
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+      
+    }
+    
+    else if(input$borough4== "Manhattan"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "MANHATTAN")
+      
+      
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+    }
+    else if(input$borough4 == "Queens"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "QUEENS")
+      
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+    }
+    else if(input$borough4 == "Staten Island"){
+      district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "STATEN ISLAND")
+      
+      
+      if (input$harm == "Death"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_KILLED))%>%
+            filter(count>0)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_KILLED))%>%
+            filter(count>1)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Injured"){
+        
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+      }
+      else if(input$harm == "Both"){
+        if (input$victim == "Pedestrians"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PEDESTRIANS_INJURED)+sum(NUMBER_OF_PEDESTRIANS_KILLED ) )%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Cyclist"){
+          
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_CYCLIST_INJURED))%>%
+            filter(count>5)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "Motorist"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_MOTORIST_INJURED))%>%
+            filter(count>20)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        else if (input$victim == "All"){
+          vehicle_analysis <- district_analysis_borugh%>%
+            group_by(VEHICLE_TYPE_CODE_1,Year)%>%
+            summarise(count=sum(NUMBER_OF_PERSONS_INJURED))%>%
+            filter(count>50)%>%
+            filter(VEHICLE_TYPE_CODE_1 != "")
+          
+          ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1))+
+            geom_histogram(stat = "identity") +
+            labs(y="Number of different vehicle collisions happened", x="Year")  + 
+            theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+          
+          
+        }
+        
+        
+      }
+    }
+    
+  }, height = 750, width = 900)
+  
 }
 
 shinyApp(ui, server)
