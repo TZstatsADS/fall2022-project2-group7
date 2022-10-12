@@ -50,12 +50,13 @@ body <- dashboardBody(
     
     tabItem(tabName = "Home", fluidPage(
       fluidRow(box(width = 20, title = "Introduction", status = "primary",
-                   solidHeader = TRUE, h3("Motor Vehicle Collisions"),
+                   solidHeader = TRUE, h3("NYC Motor Vehicle Collisions"),
                    h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
-                   h5("DataSet: The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
-                   h6("The application will mainly track down the change in the number of businesses being closed or newly opened across Covid timeline. We divided the businesses into 4 types:", strong("Retail, Service, Food and Beverage, Entertainment"))))
-
-    )), # end of home 
+                   h5(strong("Dataset:"), "The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
+                   h5(strong("Collection of Data:"), "The citywide traffic safety initiative, Vision Zero, started in the year 2014 and has pushed for further data collection. NYPD officers now document the information to be stored in a database using the The Finest Online Records Management System (FORMS). It is updated daily."),
+                   h5(strong("Purpose of Tool:"), "This tool provides the ability to explore traffic patterns through the years and see how COVID has affected it. It can be used by a number of different audiences. Primarily, it can used by the NYPD & Vision Zero (the citywide safety traffic initiative) for the purposes of improving safety. It can even be used by NYC commuters to plan optimal routes, or  prospective home buyers to explore safer neighborhoods. Users can analyze the initial extreme COVID effects in 2020, but also see what persists today since the data is updated daily. We know COVID has changed travel due to things like remote work and limited flights, but there are different ways to explore it")
+                   )))
+    ), # end of home 
     # ------------------ Map-----------------------------------
     tabItem(tabName = "Map",
             h2("Map", align = 'center'),
@@ -145,7 +146,17 @@ body <- dashboardBody(
                             plotOutput(outputId = "Plot4")
                           )
               )
-        )
+        ),
+    
+    
+    # ------------------ References ----------------------------------------------------------------
+    
+    tabItem(tabName = "References", fluidPage(
+      fluidRow(box(width = 20, title = "References", status = "primary",
+                   solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
+                   h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
+      )))
+    ) # end of reference
     
     )
 )
@@ -162,7 +173,8 @@ ui <- dashboardPage(
       menuItem("Boroughs", tabName = "Boroughs"),
       menuItem("Type of Accidents", tabName = "Type"),
       menuItem("Time of Accidents", tabName = "Time"),
-      menuItem("Casualities of Accidents", tabName = "Casualities")
+      menuItem("Casualities of Accidents", tabName = "Casualities"),
+      menuItem("References", tabName = "References")
   )),
   body
 )
