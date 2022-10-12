@@ -1,21 +1,19 @@
-library(shiny)
+
+#library(shiny)
 library(ggplot2)
 library(plotly)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(shinydashboard)
-library(fresh)
+library(fresh) 
+library(devtools)
+install_github('arilamstein/choroplethrZip@v1.5.0')
+devtools::install_github("arilamstein/choroplethrZip@v1.5.0")
+library(choroplethr)
+library(choroplethrZip)
+library(rsconnect)
 
-#if (!require("choroplethr")) install.packages("choroplethr")
-#if (!require("devtools")) install.packages("devtools")
-#library(devtools)
-
-#if (!require("choroplethrZip")) 
-# devtools::install_github('arilamstein/choroplethrZip@v1.5.0')
-
-#if (!require("ggmap")) devtools::install_github("dkahle/ggmap")
-#library(choroplethrZip)
 
 vehicle_collisions_df = read.csv("VehicleCollisions.csv") %>% drop_na()
 colnames(vehicle_collisions_df) <- gsub("\\.","_",colnames(vehicle_collisions_df))
@@ -54,15 +52,33 @@ body <- dashboardBody(
     
     tabItem(tabName = "Home", fluidPage(
       fluidRow(box(width = 20, title = "Introduction", status = "primary",
-                   solidHeader = TRUE, h3("Motor Vehicle Collisions"),
+                   solidHeader = TRUE, h3("NYC Motor Vehicle Collisions"),
                    h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
-                   h5("Drawing data from multiple sources, this application provides insight into the economic impact of coronavirus 2019 (COVID-19) on New York’s city economy. The results shed light on both the financial fragility of many businesses, and the significant impact COVID-19 had on these businesses in the weeks after the COVID-19–related disruptions began."),
-                   h5("The application will mainly track down the change in the number of businesses being closed or newly opened across Covid timeline. We divided the businesses into 4 types:", strong("Retail, Service, Food and Beverage, Entertainment"))))
-      
-    )), # end of home 
+                   h5(strong("Dataset:"), "The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
+                   h5(strong("Collection of Data:"), "The citywide traffic safety initiative, Vision Zero, started in the year 2014 and has pushed for further data collection. NYPD officers now document the information to be stored in a database using the The Finest Online Records Management System (FORMS). It is updated daily."),
+                   h5(strong("Purpose of Tool:"), "This tool provides the ability to explore traffic patterns through the years and see how COVID has affected it. It can be used by a number of different audiences. Primarily, it can used by the NYPD & Vision Zero (the citywide safety traffic initiative) for the purposes of improving safety. It can even be used by NYC commuters to plan optimal routes, or  prospective home buyers to explore safer neighborhoods. Users can analyze the initial extreme COVID effects in 2020, but also see what persists today since the data is updated daily. We know COVID has changed travel due to things like remote work and limited flights, but there are different ways to explore it")
+      )))
+    ), # end of home 
+    # ------------------ Map-----------------------------------
+    tabItem(tabName = "Map",
+            h2("Map", align = 'center'),
+            sidebarLayout(position = "left", 
+                          sidebarPanel(
+                            h4("Filter"),
+                            
+                            # widget for crime type
+                            selectInput(inputId = "year",
+                                        label = "Choose a year:",
+                                        choices = c("All","2017", "2018", "2019", "2020", "2021","2022"))
+                          ),
+                          mainPanel(
+                            plotOutput(outputId = "Plot7")
+                          )
+            )
+    ),
     # ------------------ Boroughs-----------------------------------
     tabItem(tabName = "Boroughs",
-            h2("How Many Accidents occured In Each Neighborhood?", align = 'center'),
+            h2("Accidents occured In Each Neighborhood", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -79,7 +95,7 @@ body <- dashboardBody(
     ),
     # ------------------ Type of Accidents-----------------------------------
     tabItem(tabName = "Type",
-            h2("Different types of accidents occured", align = 'center'),
+            h2("Types of accidents occured", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -96,7 +112,7 @@ body <- dashboardBody(
     ),
     # ------------------ Time of Accidents-----------------------------------
     tabItem(tabName = "Time",
-            h2("Different Times when accidents occured", align = 'center'),
+            h2("Time when accidents occured", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -112,7 +128,7 @@ body <- dashboardBody(
             )
     ),
     tabItem(tabName = "Casualities",
-            h2("Different Victims when accidents occured", align = 'center'),
+            h2("Victims of accidents", align = 'center'),
             sidebarLayout(position = "left", 
                           sidebarPanel(
                             h4("Filter"),
@@ -132,7 +148,17 @@ body <- dashboardBody(
                             plotOutput(outputId = "Plot4")
                           )
             )
-    )
+    ),
+    
+    
+    # ------------------ References ----------------------------------------------------------------
+    
+    tabItem(tabName = "References", fluidPage(
+      fluidRow(box(width = 20, title = "References", status = "primary",
+                   solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
+                   h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
+      )))
+    ) # end of reference
     
   )
 )
@@ -145,18 +171,20 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Home", tabName = "Home"),
+      menuItem("Map", tabName = "Map"),
       menuItem("Boroughs", tabName = "Boroughs"),
       menuItem("Type of Accidents", tabName = "Type"),
       menuItem("Time of Accidents", tabName = "Time"),
-      menuItem("Casualities of Accidents", tabName = "Casualities")
+      menuItem("Casualities of Accidents", tabName = "Casualities"),
+      menuItem("References", tabName = "References")
     )),
   body
 )
 
 
-server <- function(input, output,session) {
+server <- function(input, output) {
   
-  session$allowReconnect("force")
+ # session$allowReconnect("force")
   
   output$Plot1 <- renderPlot({ 
     
@@ -194,11 +222,70 @@ server <- function(input, output,session) {
   
   ###############################################################  
   
+  output$Plot7 <- renderPlot({ 
+    
+    if(input$year == "All"){
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+      
+    }
+    else if(input$year == "2017"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$year == "2018"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$year == "2019"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$year == "2020"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$year == "2021"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    else if(input$year == "2022"){
+      vehicle_collisions_df_year <- filter(vehicle_collisions_df,Year == 2017)
+      vehicle_analysis_for_map_collisions <- vehicle_collisions_df_year%>% rename(region = ZIP_CODE)
+      vehicle_analysis_for_map_collisions<-vehicle_analysis_for_map_collisions %>%  group_by(region) %>% summarise(value=n())
+      vehicle_analysis_for_map_collisions$region<-as.character(vehicle_analysis_for_map_collisions$region)
+      zip_choropleth(vehicle_analysis_for_map_collisions, legend = "Number of Collisions", county_zoom =  c(36005, 36047, 36061, 36081, 36085)) + theme( legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
+    }
+    
+    
+    
+  }, height = 750, width = 900)
+  
+  ###############################################################  
+  
+  
   output$Plot2 <- renderPlot({ 
     
     if(input$borough2 == "All"){
       
-      vehicle_analysis <- vehicle_collisions_df %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      vehicle_analysis <- vehicle_collisions_df %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>500) %>% filter(VEHICLE_TYPE_CODE_1 != "")
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
       
@@ -207,14 +294,14 @@ server <- function(input, output,session) {
       
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BRONX")
       
-      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "") 
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>150) %>% filter(VEHICLE_TYPE_CODE_1 != "") 
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$borough2== "Manhattan"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "MANHATTAN")
       
-      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>150) %>% filter(VEHICLE_TYPE_CODE_1 != "")
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
       
@@ -222,7 +309,7 @@ server <- function(input, output,session) {
     else if(input$borough2 == "Brooklyn"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "BROOKLYN")
       
-      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>150) %>% filter(VEHICLE_TYPE_CODE_1 != "")
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
       
@@ -230,19 +317,21 @@ server <- function(input, output,session) {
     else if(input$borough2 == "Queens"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "QUEENS")
       
-      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>150) %>% filter(VEHICLE_TYPE_CODE_1 != "")
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     else if(input$borough2 == "Staten Island"){
       district_analysis_borugh <- filter(vehicle_collisions_df,BOROUGH == "STATEN ISLAND")
       
-      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>50) %>% filter(VEHICLE_TYPE_CODE_1 != "")
+      vehicle_analysis <- district_analysis_borugh %>% group_by(VEHICLE_TYPE_CODE_1,Year) %>% summarise(count=n()) %>% filter(count>150) %>% filter(VEHICLE_TYPE_CODE_1 != "")
       
       ggplot(vehicle_analysis,aes(x=factor(Year),count,fill=VEHICLE_TYPE_CODE_1)) + geom_histogram(stat = "identity") + labs(y="Number of different vehicle collisions happened",x="Year") + theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20),axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), legend.text = element_text(size = 18), legend.title = element_text(size = 18)) 
     }
     
   }, height = 750, width = 900)
+  
+  
   
   ###############################################################  
   
@@ -1488,3 +1577,4 @@ server <- function(input, output,session) {
 }
 
 shinyApp(ui, server)
+

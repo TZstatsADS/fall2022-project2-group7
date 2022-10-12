@@ -1,0 +1,14 @@
+name: Fall2022-Proj2-Group7
+title: Fall2022-Proj2-Group7
+username:
+account: css2211
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7290919
+bundleId: 6396867
+url: https://css2211.shinyapps.io/Fall2022-Proj2-Group7/
+when: 1665608705.08937
+lastSyncTime: 1665608705.08938
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .Rapp.history|app_backup.R|README.md|VehicleCollisions.csv|choroplethr|choroplethrZip
