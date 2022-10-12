@@ -56,7 +56,11 @@ body <- dashboardBody(
                    h5(strong("Dataset:"), "The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
                    h5(strong("Collection of Data:"), "The citywide traffic safety initiative, Vision Zero, started in the year 2014 and has pushed for further data collection. NYPD officers now document the information to be stored in a database using the The Finest Online Records Management System (FORMS). It is updated daily."),
                    h5(strong("Purpose of Tool:"), "This tool provides the ability to explore traffic patterns through the years and see how COVID has affected it. It can be used by a number of different audiences. Primarily, it can used by the NYPD & Vision Zero (the citywide safety traffic initiative) for the purposes of improving safety. It can even be used by NYC commuters to plan optimal routes, or  prospective home buyers to explore safer neighborhoods. Users can analyze the initial extreme COVID effects in 2020, but also see what persists today since the data is updated daily. We know COVID has changed travel due to things like remote work and limited flights, but there are different ways to explore it")
+<<<<<<< HEAD
       )))
+=======
+                   )))
+>>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
     ), # end of home 
     # ------------------ Map-----------------------------------
     tabItem(tabName = "Map",
@@ -146,8 +150,23 @@ body <- dashboardBody(
                           mainPanel(
                             plotOutput(outputId = "Plot4")
                           )
+<<<<<<< HEAD
             )
     ),
+=======
+              )
+        ),
+    
+    
+    # ------------------ References ----------------------------------------------------------------
+    
+    tabItem(tabName = "References", fluidPage(
+      fluidRow(box(width = 20, title = "References", status = "primary",
+                   solidHeader = TRUE, h5(strong("Dataset:"), "https://data.cityofnewyork.us/Public-Safety/Motor-Vehicle-Collisions-Crashes/h9gi-nx95"),
+                   h5(strong("Contributors:"), "Chaitanya Shah (css2211@columbia.edu), Weilin Zhou (wz2563@columbia.edu), John Podias (jep2215@columbia.edu)")
+      )))
+    ) # end of reference
+>>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
     
     
     # ------------------ References ----------------------------------------------------------------
@@ -176,7 +195,11 @@ ui <- dashboardPage(
       menuItem("Time of Accidents", tabName = "Time"),
       menuItem("Casualities of Accidents", tabName = "Casualities"),
       menuItem("References", tabName = "References")
+<<<<<<< HEAD
     )),
+=======
+  )),
+>>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
   body
 )
 
@@ -274,7 +297,10 @@ server <- function(input, output) {
     }
     
     
+<<<<<<< HEAD
     
+=======
+>>>>>>> aa35c3771cd2df4c724670ea9d9ff9403a9300e5
   }, height = 750, width = 750)
   
   ###############################################################  
