@@ -4,7 +4,7 @@ library(plotly)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
-#library(shinydashboard)
+library(shinydashboard)
 library(fresh) 
 library(devtools)
 install_github('arilamstein/choroplethrZip@v1.5.0', force=TRUE)
@@ -52,8 +52,8 @@ body <- dashboardBody(
       fluidRow(box(width = 20, title = "Introduction", status = "primary",
                    solidHeader = TRUE, h3("Motor Vehicle Collisions"),
                    h4("By Chaitanya Shah, Weilin Zhou, John Podias"),
-                   h5("Drawing data from multiple sources, this application provides insight into the economic impact of coronavirus 2019 (COVID-19) on New York’s city economy. The results shed light on both the financial fragility of many businesses, and the significant impact COVID-19 had on these businesses in the weeks after the COVID-19–related disruptions began."),
-                   h5("The application will mainly track down the change in the number of businesses being closed or newly opened across Covid timeline. We divided the businesses into 4 types:", strong("Retail, Service, Food and Beverage, Entertainment"))))
+                   h5("DataSet: The dataset is taken from NYC Open Data and sourced from the NYPD. It is a collection of NYC motor-vehicle collisions where each row is a collision. It contains multiple data fields that describe the collisions such as vehicle type, date of accidents, zip code, borough, reason for accident, number of deaths, etc."),
+                   h6("The application will mainly track down the change in the number of businesses being closed or newly opened across Covid timeline. We divided the businesses into 4 types:", strong("Retail, Service, Food and Beverage, Entertainment"))))
 
     )), # end of home 
     # ------------------ Map-----------------------------------
