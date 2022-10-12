@@ -21,7 +21,7 @@ Term: Fall 2022
 
 + Team 7
 + **Projec title**: NYC Motor Vehicle Accidents
-	+ Chaitanya Shahg
+	+ Chaitanya Shah
 	+ Weilin Zhou
 	+ John Podias
 
